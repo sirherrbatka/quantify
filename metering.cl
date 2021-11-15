@@ -511,7 +511,7 @@ adjusted for overhead."
 ;                        (setf inclusive-cons (+ delta-cons old-cons))
                          (incf exclusive-cons (the consing-type
                                                    (+ delta-cons
-                                                      delta-time-exclusive)))
+                                                      delta-cons-exclusive)))
                          (setf *total-cons*
                                (the consing-type
                                     (+ delta-cons prev-total-cons))))))))
