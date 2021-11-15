@@ -394,22 +394,22 @@ adjusted for overhead."
           (case nested
             (:exclusive (values calls
                                 nested-calls
-                                (- exclusive-time
-                                   (* calls *monitor-time-overhead*))
-                                (- exclusive-cons
-                                   (* calls *monitor-cons-overhead*))))
+                                (round (- exclusive-time
+                                          (* calls *monitor-time-overhead*)))
+                                (round (- exclusive-cons
+                                          (* calls *monitor-cons-overhead*)))))
             ;; In :inclusive mode, subtract overhead for all the
             ;; called functions as well. Nested-calls includes the
             ;; calls of the function as well. [Necessary 'cause of
             ;; functions which call themselves recursively.]
             (:inclusive (values calls
                                 nested-calls
-                                (- inclusive-time
-                                   (* nested-calls ;(+ calls)
-                                      *monitor-time-overhead*))
-                                (- inclusive-cons
-                                   (* nested-calls ;(+ calls)
-                                      *monitor-cons-overhead*))))))
+                                (round (- inclusive-time
+                                          (* nested-calls ;(+ calls)
+                                             *monitor-time-overhead*)))
+                                (round (- inclusive-cons
+                                          (* nested-calls ;(+ calls)
+                                             *monitor-cons-overhead*)))))))
         (values 0 0 0 0))))
 
 ;;; ********************************
@@ -470,12 +470,12 @@ adjusted for overhead."
                               `(apply old-definition
                                       ,@required-args optional-args)
                               `(funcall old-definition ,@required-args))
-                       (let ((delta-time (- (get-time) start-time))
-                             (delta-cons (- (get-cons) start-cons))
-                             (delta-time-exclusive (the time-type
-                                                        (+ delta-time
-                                                           (- prev-total-time
-                                                              *total-time*))))
+                       (let* ((delta-time (- (get-time) start-time))
+                              (delta-cons (- (get-cons) start-cons))
+                              (delta-time-exclusive (the time-type
+                                                         (+ delta-time
+                                                            (- prev-total-time
+                                                               *total-time*))))
                              (final-call-p (= number-of-samples (number-of-samples)))
                              (delta-cons-exclusive (+ delta-cons
                                                       (- prev-total-cons
@@ -686,8 +686,8 @@ of an empty function many times."
     (multiple-value-bind (calls nested-calls time cons)
         (monitor-info-values 'stub-function)
       (declare (ignore calls nested-calls))
-      (setq *monitor-time-overhead* (truncate (/ time fiter))
-            *monitor-cons-overhead* (truncate (/ cons fiter)))))
+      (setq *monitor-time-overhead* (coerce (/ time fiter) 'double-float)
+            *monitor-cons-overhead* (coerce (/ cons fiter) 'double-float))))
   (unmonitor stub-function))
 (set-monitor-overhead)
 
@@ -889,7 +889,7 @@ below THRESHOLD % of the time will not be reported."
     (maphash (lambda (symbols cost.calls)
                (destructuring-bind (cost . calls) cost.calls
                  (format stream "~{~a~^;~} " (reverse symbols))
-                 (format stream "~a~%" (- cost (* *monitor-time-overhead* calls)))))
+                 (format stream "~a~%" (round (- cost (* *monitor-time-overhead* calls))))))
              sums)))
 
 (defmethod format-flamegraph (output)
