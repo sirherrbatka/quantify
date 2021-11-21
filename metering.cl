@@ -279,10 +279,11 @@
 (proclaim '(type consing-type *total-cons*))
 (proclaim '(fixnum *total-calls*))
 
-(defstruct function-call-sample
-  (name nil :type symbol)
-  (time 0 :type fixnum)
-  (cons 0 :type fixnum))
+(eval-when (compile load eval)
+  (defstruct function-call-sample
+    (name nil :type symbol)
+    (time 0 :type fixnum)
+    (cons 0 :type fixnum)))
 
 ;;; ********************************
 ;;; Accessor Functions *************
@@ -433,7 +434,6 @@ adjusted for overhead."
              (exclusive-time 0)
              (exclusive-cons 0)
              (calls 0)
-             (stub-p (eq name 'stub-function))
              (nested-calls 0)
              (old-definition (place-function name)))
          (declare (type time-type inclusive-time)
@@ -672,8 +672,8 @@ THRESHOLD % will be reported."
 (defun SET-MONITOR-OVERHEAD ()
   "Determines the average overhead of monitoring by monitoring the execution
 of an empty function many times."
-  (setq *monitor-time-overhead* 0
-        *monitor-cons-overhead* 0)
+  (setq *monitor-time-overhead* 0.0d0
+        *monitor-cons-overhead* 0.0d0)
   (stub-function nil)
   (monitor stub-function)
   (reset-all-monitoring)
@@ -698,8 +698,8 @@ of an empty function many times."
   "A table of monitoring statistics is stored here.")
 (defvar *no-calls* nil
   "A list of monitored functions which weren't called.")
-(defvar *estimated-total-overhead* 0)
-(proclaim '(type time-type *estimated-total-overhead*))
+(defvar *estimated-total-overhead* 0.0d0)
+(proclaim '(type double-float *estimated-total-overhead*))
 
 (defstruct (monitoring-info
             (:conc-name m-info-)
